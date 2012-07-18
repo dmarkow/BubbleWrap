@@ -241,7 +241,7 @@ describe "HTTP" do
           lambda { query = create_query(data, nil) }.should.not.raise NoMethodError
         end
 
-        it "sets the payload as a string if JSON" do 
+        it "sets the payload as a string if JSON" do
           json = BW::JSON.generate({foo:42, bar:'BubbleWrap'})
            puts "\n"
           [:put, :post, :delete, :patch].each do |method|
@@ -349,6 +349,17 @@ describe "HTTP" do
 
       it "should automatically provide Content-Type if a payload is provided" do
         @post_query.request.allHTTPHeaderFields.should.include?('Content-Type')
+      end
+
+      it "should use the correct JSON Content-Type for string/JSON payloads" do
+        @payload = "{\"key\":\"abc1234\"}"
+        @post_query = BubbleWrap::HTTP::Query.new(@url_string, :post, {headers: @headers, payload: @payload})
+        @post_query.request.allHTTPHeaderFields['Content-Type'].should.equal 'application/json'
+      end
+
+      it "should use the multipart/form-data Content-Type for all non-string/JSON payloads" do
+        uuid = @post_query.instance_variable_get(:@boundary)
+        @post_query.request.allHTTPHeaderFields['Content-Type'].should.equal "multipart/form-data; boundary=#{uuid}"
       end
 
       it "should not add Content-Type if you provide one yourself" do

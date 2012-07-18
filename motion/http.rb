@@ -222,13 +222,12 @@ Cache policy: #{@cache_policy}, response: #{@response.inspect} >"
         return nil unless (@payload || @files)
 
         # if no headers provided, set content-type automatically
-        if @headers.nil?
-          @headers = {"Content-Type" => "multipart/form-data; boundary=#{@boundary}"}
-        # else set content type unless it is specified
-        # if content-type is specified, you should probably also specify
-        # the :boundary key
-        else
-          @headers['Content-Type'] = "multipart/form-data; boundary=#{@boundary}" unless @headers.keys.find {|k| k.downcase == 'content-type'}
+        if @headers.nil? || !@headers.keys.find {|k| k.downcase == 'content-type'}
+          if @payload && @payload.is_a?(String)
+            @headers = {"Content-Type" => "application/json"}
+          else
+            @headers = {"Content-Type" => "multipart/form-data; boundary=#{@boundary}"}
+          end
         end
 
         body = NSMutableData.data
